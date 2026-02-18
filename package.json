@@ -12,7 +12,8 @@
     "server": "node server/server.js",
     "client": "vite",
     "start": "concurrently \"npm run server\" \"npm run client\"",
-    "start:dev": "concurrently --names \"SERVER,CLIENT\" --prefix-colors \"blue,green\" \"npm run server\" \"npm run client\""
+    "start:dev": "concurrently --names \"SERVER,CLIENT\" --prefix-colors \"blue,green\" \"npm run server\" \"npm run client\"",
+    "deploy": "npm run build && firebase deploy --only hosting"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
