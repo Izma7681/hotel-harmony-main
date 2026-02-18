@@ -24,17 +24,35 @@ export function useRooms() {
         
         // Check if room has active booking
         const now = new Date();
-        const activeBooking = bookingsData.find(booking => 
-          booking.roomId === room.id &&
-          (booking.status === 'confirmed' || booking.status === 'checked-in') &&
-          new Date(booking.checkIn) <= now &&
-          new Date(booking.checkOut) >= now
-        );
+        now.setHours(0, 0, 0, 0);
         
-        // Update room status based on booking
-        if (activeBooking && room.status !== 'maintenance') {
+        const activeBooking = bookingsData.find(booking => {
+          const checkIn = new Date(booking.checkIn);
+          const checkOut = new Date(booking.checkOut);
+          checkIn.setHours(0, 0, 0, 0);
+          checkOut.setHours(0, 0, 0, 0);
+          
+          return booking.roomId === room.id &&
+            (booking.status === 'confirmed' || booking.status === 'checked-in') &&
+            checkIn <= now &&
+            checkOut >= now;
+        });
+        
+        const futureBooking = bookingsData.find(booking => {
+          const checkIn = new Date(booking.checkIn);
+          checkIn.setHours(0, 0, 0, 0);
+          
+          return booking.roomId === room.id &&
+            booking.status === 'confirmed' &&
+            checkIn > now;
+        });
+        
+        // Auto-update room status based on booking
+        if (activeBooking) {
           room.status = 'occupied';
-        } else if (!activeBooking && room.status === 'occupied') {
+        } else if (futureBooking) {
+          room.status = 'reserved';
+        } else {
           room.status = 'available';
         }
         

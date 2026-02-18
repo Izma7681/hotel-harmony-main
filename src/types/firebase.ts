@@ -10,9 +10,9 @@ export interface User {
 export interface Room {
   id: string;
   roomNumber: string;
-  type: string;
+  type: 'single' | 'double';
   price: number;
-  status: 'available' | 'occupied' | 'maintenance';
+  status: 'available' | 'occupied' | 'reserved';
   floor: number;
   amenities: string[];
   createdAt: Date;
@@ -21,14 +21,23 @@ export interface Room {
 
 export interface Booking {
   id: string;
+  customerId: string;
   roomId: string;
   roomNumber: string;
-  guestName: string;
-  guestEmail: string;
-  guestPhone: string;
+  customerName: string;
+  secondPersonName?: string;
+  customerEmail: string;
+  customerPhone: string;
+  aadharNumber: string;
   checkIn: Date;
   checkOut: Date;
+  numberOfAdults: number;
+  baseAmount: number;
+  gstAmount: number;
   totalAmount: number;
+  advancePayment: number;
+  remainingAmount: number;
+  paymentMode: 'gpay' | 'cash';
   status: 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled';
   createdBy: string;
   createdAt: Date;
@@ -37,10 +46,23 @@ export interface Booking {
 
 export interface Expense {
   id: string;
-  category: string;
+  title: string;
+  category: 'maintenance' | 'staff' | 'utility' | 'other';
   amount: number;
   description: string;
+  notes?: string;
   date: Date;
   createdBy: string;
+  createdAt: Date;
+}
+
+export interface Payment {
+  id: string;
+  bookingId: string;
+  roomNumber: string;
+  customerName: string;
+  amount: number;
+  paymentMode: 'gpay' | 'cash';
+  date: Date;
   createdAt: Date;
 }

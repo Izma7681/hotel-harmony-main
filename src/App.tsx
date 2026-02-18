@@ -12,8 +12,16 @@ import CheckUser from "./pages/CheckUser";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageReceptionists from "./pages/admin/ManageReceptionists";
 import ManageRooms from "./pages/admin/ManageRooms";
+import AdminManageBookings from "./pages/admin/ManageBookings";
+import Billing from "./pages/admin/Billing";
+import Reports from "./pages/admin/Reports";
+import Expenses from "./pages/admin/Expenses";
+import Customers from "./pages/admin/Customers";
+import SetupRooms from "./pages/admin/SetupRooms";
 import ReceptionistDashboard from "./pages/receptionist/ReceptionistDashboard";
-import ManageBookings from "./pages/receptionist/ManageBookings";
+import ReceptionistManageBookings from "./pages/receptionist/ManageBookings";
+import ViewRooms from "./pages/receptionist/ViewRooms";
+import ReceptionistBilling from "./pages/receptionist/Billing";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import CustomerRooms from "./pages/customer/CustomerRooms";
 import CustomerBookings from "./pages/customer/CustomerBookings";
@@ -64,7 +72,47 @@ const App = () => (
               path="/admin/bookings"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
-                  <ManageBookings />
+                  <AdminManageBookings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/billing"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Billing />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/reports"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Reports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/expenses"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Expenses />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/customers"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <Customers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/setup-rooms"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <SetupRooms />
                 </ProtectedRoute>
               }
             />
@@ -79,10 +127,26 @@ const App = () => (
               }
             />
             <Route
+              path="/receptionist/rooms"
+              element={
+                <ProtectedRoute allowedRoles={['receptionist']}>
+                  <ViewRooms />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/receptionist/bookings"
               element={
                 <ProtectedRoute allowedRoles={['receptionist']}>
-                  <ManageBookings />
+                  <ReceptionistManageBookings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/receptionist/billing"
+              element={
+                <ProtectedRoute allowedRoles={['receptionist']}>
+                  <ReceptionistBilling />
                 </ProtectedRoute>
               }
             />

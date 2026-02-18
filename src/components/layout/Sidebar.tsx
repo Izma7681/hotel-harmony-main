@@ -7,6 +7,10 @@ import {
   Users,
   CalendarCheck,
   ChevronLeft,
+  DollarSign,
+  FileText,
+  TrendingUp,
+  UserCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,12 +33,18 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
   const navItems: NavItem[] = 
     user?.role === 'admin' ? [
       { icon: LayoutDashboard, label: 'Dashboard', href: '/admin/dashboard', roles: ['admin'] },
-      { icon: Users, label: 'Receptionists', href: '/admin/receptionists', roles: ['admin'] },
       { icon: BedDouble, label: 'Rooms', href: '/admin/rooms', roles: ['admin'] },
       { icon: CalendarCheck, label: 'Bookings', href: '/admin/bookings', roles: ['admin'] },
+      { icon: DollarSign, label: 'Billing', href: '/admin/billing', roles: ['admin'] },
+      { icon: FileText, label: 'Reports', href: '/admin/reports', roles: ['admin'] },
+      { icon: TrendingUp, label: 'Expenses', href: '/admin/expenses', roles: ['admin'] },
+      { icon: UserCircle, label: 'Customers', href: '/admin/customers', roles: ['admin'] },
+      { icon: Users, label: 'Receptionists', href: '/admin/receptionists', roles: ['admin'] },
     ] : user?.role === 'receptionist' ? [
       { icon: LayoutDashboard, label: 'Dashboard', href: '/receptionist/dashboard', roles: ['receptionist'] },
+      { icon: BedDouble, label: 'View Rooms', href: '/receptionist/rooms', roles: ['receptionist'] },
       { icon: CalendarCheck, label: 'Bookings', href: '/receptionist/bookings', roles: ['receptionist'] },
+      { icon: DollarSign, label: 'Billing', href: '/receptionist/billing', roles: ['receptionist'] },
     ] : [
       { icon: LayoutDashboard, label: 'Dashboard', href: '/customer/dashboard', roles: ['customer'] },
       { icon: BedDouble, label: 'Rooms', href: '/customer/rooms', roles: ['customer'] },

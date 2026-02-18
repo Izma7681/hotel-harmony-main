@@ -17,9 +17,10 @@ export function useBookings() {
         return {
           id: doc.id,
           ...booking,
-          checkIn: booking.checkIn.toDate(),
-          checkOut: booking.checkOut.toDate(),
-          createdAt: booking.createdAt.toDate()
+          checkIn: booking.checkIn?.toDate ? booking.checkIn.toDate() : new Date(booking.checkIn),
+          checkOut: booking.checkOut?.toDate ? booking.checkOut.toDate() : new Date(booking.checkOut),
+          createdAt: booking.createdAt?.toDate ? booking.createdAt.toDate() : new Date(booking.createdAt),
+          customerId: booking.customerId || booking.customerPhone?.replace(/\D/g, '') || 'unknown'
         } as Booking;
       });
       setBookings(data);
@@ -36,53 +37,35 @@ export function useBookings() {
 
   const addBooking = async (data: Omit<Booking, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>) => {
     try {
-      await addDoc(collection(db, 'bookings'), {
+      // Generate a customerId from phone number for customer tracking
+      const customerId = data.customerPhone.replace(/\D/g, ''); // Remove non-digits
+      
+      const bookingData = {
         ...data,
-        createdBy: user?.id,
+        customerId: customerId,
+        createdBy: user?.id || 'system',
         createdAt: new Date(),
         updatedAt: new Date()
-      });
+      };
+
+      console.log('Creating booking with data:', bookingData);
       
-      // Update room status to occupied if booking is confirmed or checked-in
-      if (data.roomId && (data.status === 'confirmed' || data.status === 'checked-in')) {
-        await updateDoc(doc(db, 'rooms', data.roomId), {
-          status: 'occupied',
-          updatedAt: new Date()
-        });
-      }
+      await addDoc(collection(db, 'bookings'), bookingData);
       
       await fetchBookings();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding booking:', error);
+      console.error('Error details:', error.message, error.code);
       throw error;
     }
   };
 
   const updateBooking = async (id: string, data: Partial<Booking>) => {
     try {
-      const booking = bookings.find(b => b.id === id);
-      
       await updateDoc(doc(db, 'bookings', id), {
         ...data,
         updatedAt: new Date()
       });
-      
-      // Update room status based on booking status
-      if (booking?.roomId) {
-        if (data.status === 'confirmed' || data.status === 'checked-in') {
-          // Set room to occupied
-          await updateDoc(doc(db, 'rooms', booking.roomId), {
-            status: 'occupied',
-            updatedAt: new Date()
-          });
-        } else if (data.status === 'checked-out' || data.status === 'cancelled') {
-          // Set room back to available
-          await updateDoc(doc(db, 'rooms', booking.roomId), {
-            status: 'available',
-            updatedAt: new Date()
-          });
-        }
-      }
       
       await fetchBookings();
     } catch (error) {
@@ -91,20 +74,13 @@ export function useBookings() {
     }
   };
 
+  const updateBookingStatus = async (id: string, status: Booking['status']) => {
+    await updateBooking(id, { status });
+  };
+
   const deleteBooking = async (id: string) => {
     try {
-      const booking = bookings.find(b => b.id === id);
-      
       await deleteDoc(doc(db, 'bookings', id));
-      
-      // Set room back to available when booking is deleted
-      if (booking?.roomId) {
-        await updateDoc(doc(db, 'rooms', booking.roomId), {
-          status: 'available',
-          updatedAt: new Date()
-        });
-      }
-      
       await fetchBookings();
     } catch (error) {
       console.error('Error deleting booking:', error);
@@ -112,5 +88,5 @@ export function useBookings() {
     }
   };
 
-  return { bookings, loading, addBooking, updateBooking, deleteBooking, refetch: fetchBookings };
+  return { bookings, loading, addBooking, updateBooking, updateBookingStatus, deleteBooking, refetch: fetchBookings };
 }
