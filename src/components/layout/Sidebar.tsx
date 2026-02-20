@@ -63,7 +63,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
         {isOpen ? (
           <div className="flex items-center gap-3">
             <img
-              src="/hk.png"
+              src="/hk.webp"
               alt="Hotel Krishna Logo"
               className="w-10 h-10 rounded-full object-cover shadow-gold"
             />
@@ -74,7 +74,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
           </div>
         ) : (
           <img
-            src="/hk.png"
+            src="/hk.webp"
             alt="Hotel Krishna Logo"
             className="w-10 h-10 rounded-full object-cover mx-auto shadow-gold"
           />

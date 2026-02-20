@@ -148,7 +148,7 @@ export default function Reports() {
             </CardContent>
           </Card>
 
-          {/* Room Type Revenue Distribution */}
+          {/* Room Type Revenue Distribution
           <Card>
             <CardHeader>
               <CardTitle>Revenue by Room Type</CardTitle>
@@ -174,7 +174,7 @@ export default function Reports() {
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Occupancy Trend */}
           <Card>

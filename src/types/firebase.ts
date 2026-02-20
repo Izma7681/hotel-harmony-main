@@ -3,6 +3,7 @@ export interface User {
   email: string;
   name: string;
   role: 'admin' | 'receptionist' | 'customer';
+  gstNumber?: string;
   createdAt: Date;
   createdBy?: string;
 }
@@ -29,6 +30,7 @@ export interface Booking {
   customerEmail: string;
   customerPhone: string;
   aadharNumber: string;
+  gstNumber?: string;
   checkIn: Date;
   checkOut: Date;
   numberOfAdults: number;
@@ -38,6 +40,8 @@ export interface Booking {
   advancePayment: number;
   remainingAmount: number;
   paymentMode: 'gpay' | 'cash';
+  paymentStatus?: 'pending' | 'partial' | 'paid';
+  paidAt?: Date;
   status: 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled';
   createdBy: string;
   createdAt: Date;

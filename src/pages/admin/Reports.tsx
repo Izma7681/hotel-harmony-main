@@ -315,7 +315,7 @@ export default function Reports() {
               </CardContent>
             </Card>
 
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>Revenue by Room Type</CardTitle>
               </CardHeader>
@@ -332,7 +332,7 @@ export default function Reports() {
                   ))}
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </div>
 

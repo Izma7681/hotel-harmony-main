@@ -65,7 +65,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             )}
             <div className="flex items-center gap-3">
               <img
-                src="/hk.png"
+                src="/hk.webp"
                 alt="Hotel Krishna Logo"
                 className="w-8 h-8 rounded-full object-cover"
               />
