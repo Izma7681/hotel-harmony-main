@@ -12,16 +12,14 @@ import CheckUser from "./pages/CheckUser";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageReceptionists from "./pages/admin/ManageReceptionists";
 import ManageRooms from "./pages/admin/ManageRooms";
-import AdminManageBookings from "./pages/admin/ManageBookings";
+import ManageBookings from "./pages/admin/ManageBookings";
 import Billing from "./pages/admin/Billing";
 import Reports from "./pages/admin/Reports";
 import Expenses from "./pages/admin/Expenses";
 import Customers from "./pages/admin/Customers";
 import SetupRooms from "./pages/admin/SetupRooms";
 import ReceptionistDashboard from "./pages/receptionist/ReceptionistDashboard";
-import ReceptionistManageBookings from "./pages/receptionist/ManageBookings";
 import ViewRooms from "./pages/receptionist/ViewRooms";
-import ReceptionistBilling from "./pages/receptionist/Billing";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import CustomerRooms from "./pages/customer/CustomerRooms";
 import CustomerBookings from "./pages/customer/CustomerBookings";
@@ -72,7 +70,7 @@ const App = () => (
               path="/admin/bookings"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminManageBookings />
+                  <ManageBookings />
                 </ProtectedRoute>
               }
             />
@@ -138,7 +136,7 @@ const App = () => (
               path="/receptionist/bookings"
               element={
                 <ProtectedRoute allowedRoles={['receptionist']}>
-                  <ReceptionistManageBookings />
+                  <ManageBookings />
                 </ProtectedRoute>
               }
             />
@@ -146,7 +144,7 @@ const App = () => (
               path="/receptionist/billing"
               element={
                 <ProtectedRoute allowedRoles={['receptionist']}>
-                  <ReceptionistBilling />
+                  <Billing />
                 </ProtectedRoute>
               }
             />

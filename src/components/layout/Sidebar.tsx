@@ -122,6 +122,7 @@ export function Sidebar({ isOpen, onToggle }: SidebarProps) {
       <button
         onClick={onToggle}
         className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-sidebar-primary text-sidebar-primary-foreground shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+        aria-label='menu'
       >
         <ChevronLeft className={cn('h-4 w-4 transition-transform', !isOpen && 'rotate-180')} />
       </button>
