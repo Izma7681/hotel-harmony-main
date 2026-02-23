@@ -42,6 +42,8 @@ export interface Booking {
   paymentMode: 'gpay' | 'cash';
   paymentStatus?: 'pending' | 'partial' | 'paid';
   paidAt?: Date;
+  finalPaymentMode?: 'gpay' | 'cash';
+  finalPaymentAmount?: number;
   status: 'pending' | 'confirmed' | 'checked-in' | 'checked-out' | 'cancelled';
   createdBy: string;
   createdAt: Date;

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useBookings } from '@/hooks/useBookings';
 import { useRooms } from '@/hooks/useRooms';
-import { Calendar, User, BedDouble, DollarSign, Plus, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, User, BedDouble, DollarSign, Plus, CheckCircle, XCircle, Phone, Mail } from 'lucide-react';
 import { format, isToday } from 'date-fns';
 import { toast } from 'sonner';
 import { isRoomAvailable, calculateBill, getDaysBetween } from '@/utils/roomAvailability';
@@ -205,74 +205,79 @@ export default function ManageBookings() {
   };
 
   const BookingCard = ({ booking }: { booking: any }) => (
-    <Card key={booking.id}>
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg">Booking #{booking.id.slice(0, 8)}</CardTitle>
-          <Badge className={getStatusColor(booking.status)}>
+    <Card key={booking.id} className="overflow-hidden">
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start gap-2">
+          <CardTitle className="text-base truncate">Booking #{booking.id.slice(0, 8)}</CardTitle>
+          <Badge className={`${getStatusColor(booking.status)} text-xs flex-shrink-0`}>
             {booking.status}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Customer</p>
-                <p className="font-medium">{booking.customerName}</p>
-                {booking.secondPersonName && (
-                  <p className="text-sm text-muted-foreground">+ {booking.secondPersonName}</p>
-                )}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <BedDouble className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Room</p>
-                <p className="font-medium">Room {booking.roomNumber}</p>
-              </div>
+      <CardContent className="pt-0">
+        <div className="space-y-3">
+          {/* Customer Info */}
+          <div className="flex items-start gap-2">
+            <User className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground">Customer</p>
+              <p className="font-medium text-sm truncate">{booking.customerName}</p>
+              {booking.secondPersonName && (
+                <p className="text-xs text-muted-foreground">+ {booking.secondPersonName}</p>
+              )}
             </div>
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Check-in / Check-out</p>
-                <p className="font-medium text-sm">
-                  {format(new Date(booking.checkIn), 'MMM dd')} - {format(new Date(booking.checkOut), 'MMM dd, yyyy')}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Total Amount</p>
-                <p className="font-medium">₹{booking.totalAmount.toFixed(2)}</p>
-              </div>
+
+          {/* Room Info */}
+          <div className="flex items-start gap-2">
+            <BedDouble className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground">Room</p>
+              <p className="font-medium text-sm">Room {booking.roomNumber}</p>
             </div>
           </div>
-        </div>
-        <div className="flex gap-2 mt-4">
-          {booking.status === 'confirmed' && (
-            <Button size="sm" onClick={() => handleCheckIn(booking.id)}>
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Check In
-            </Button>
-          )}
-          {booking.status === 'checked-in' && (
-            <Button size="sm" onClick={() => handleCheckOut(booking.id)}>
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Check Out
-            </Button>
-          )}
-          {(booking.status === 'confirmed' || booking.status === 'pending') && (
-            <Button size="sm" variant="destructive" onClick={() => handleCancel(booking.id)}>
-              <XCircle className="h-4 w-4 mr-2" />
-              Cancel
-            </Button>
-          )}
+
+          {/* Dates */}
+          <div className="flex items-start gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground">Check-in / Check-out</p>
+              <p className="font-medium text-sm">
+                {format(new Date(booking.checkIn), 'MMM dd')} - {format(new Date(booking.checkOut), 'MMM dd, yyyy')}
+              </p>
+            </div>
+          </div>
+
+          {/* Amount */}
+          <div className="flex items-start gap-2">
+            <DollarSign className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground">Total Amount</p>
+              <p className="font-medium text-sm">₹{booking.totalAmount.toFixed(0)}</p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-2 pt-2">
+            {booking.status === 'confirmed' && (
+              <Button size="sm" className="text-xs" onClick={() => handleCheckIn(booking.id)}>
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Check In
+              </Button>
+            )}
+            {booking.status === 'checked-in' && (
+              <Button size="sm" className="text-xs" onClick={() => handleCheckOut(booking.id)}>
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Check Out
+              </Button>
+            )}
+            {(booking.status === 'confirmed' || booking.status === 'pending') && (
+              <Button size="sm" variant="destructive" className="text-xs" onClick={() => handleCancel(booking.id)}>
+                <XCircle className="h-3 w-3 mr-1" />
+                Cancel
+              </Button>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -280,91 +285,98 @@ export default function ManageBookings() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Manage Bookings</h1>
+      <div className="space-y-4 px-2 sm:px-0">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold">Manage Bookings</h1>
           <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-              <Button onClick={resetForm}>
+              <Button onClick={resetForm} className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 New Booking
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Create New Booking</DialogTitle>
+                <DialogTitle className="text-lg">Create New Booking</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="customerName">Customer Name *</Label>
+                    <Label htmlFor="customerName" className="text-sm">Customer Name *</Label>
                     <Input
                       id="customerName"
                       value={formData.customerName}
                       onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
                       required
+                      className="text-sm"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="customerPhone">Phone Number *</Label>
+                    <Label htmlFor="customerPhone" className="text-sm">Phone Number *</Label>
                     <Input
                       id="customerPhone"
                       value={formData.customerPhone}
                       onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
                       required
+                      className="text-sm"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="customerEmail">Email *</Label>
+                    <Label htmlFor="customerEmail" className="text-sm">Email *</Label>
                     <Input
                       id="customerEmail"
                       type="email"
                       value={formData.customerEmail}
                       onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
                       required
+                      className="text-sm"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="aadharNumber">Aadhar Card Number *</Label>
+                    <Label htmlFor="aadharNumber" className="text-sm">Aadhar Card Number *</Label>
                     <Input
                       id="aadharNumber"
                       value={formData.aadharNumber}
                       onChange={(e) => setFormData({ ...formData, aadharNumber: e.target.value })}
                       required
+                      className="text-sm"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="checkIn">Check-in Date *</Label>
+                    <Label htmlFor="checkIn" className="text-sm">Check-in Date *</Label>
                     <Input
                       id="checkIn"
                       type="date"
                       value={formData.checkIn}
                       onChange={(e) => setFormData({ ...formData, checkIn: e.target.value })}
                       required
+                      className="text-sm"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="checkOut">Check-out Date *</Label>
+                    <Label htmlFor="checkOut" className="text-sm">Check-out Date *</Label>
                     <Input
                       id="checkOut"
                       type="date"
                       value={formData.checkOut}
                       onChange={(e) => setFormData({ ...formData, checkOut: e.target.value })}
                       required
+                      className="text-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="roomId">Select Room *</Label>
+                  <Label htmlFor="roomId" className="text-sm">Select Room *</Label>
                   <Select value={formData.roomId} onValueChange={handleRoomSelect}>
-                    <SelectTrigger>
+                    <SelectTrigger className="text-sm">
                       <SelectValue placeholder="Select an available room" />
                     </SelectTrigger>
                     <SelectContent>
@@ -385,18 +397,19 @@ export default function ManageBookings() {
 
                 {selectedRoom?.type === 'double' && (
                   <div>
-                    <Label htmlFor="secondPersonName">Second Person Name</Label>
+                    <Label htmlFor="secondPersonName" className="text-sm">Second Person Name</Label>
                     <Input
                       id="secondPersonName"
                       value={formData.secondPersonName}
                       onChange={(e) => setFormData({ ...formData, secondPersonName: e.target.value })}
+                      className="text-sm"
                     />
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="numberOfAdults">Number of Adults *</Label>
+                    <Label htmlFor="numberOfAdults" className="text-sm">Number of Adults *</Label>
                     <Input
                       id="numberOfAdults"
                       type="number"
@@ -404,10 +417,11 @@ export default function ManageBookings() {
                       value={formData.numberOfAdults}
                       onChange={(e) => setFormData({ ...formData, numberOfAdults: e.target.value })}
                       required
+                      className="text-sm"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="baseAmount">Base Amount (₹) *</Label>
+                    <Label htmlFor="baseAmount" className="text-sm">Base Amount (₹) *</Label>
                     <Input
                       id="baseAmount"
                       type="number"
@@ -416,15 +430,16 @@ export default function ManageBookings() {
                       onChange={(e) => setFormData({ ...formData, baseAmount: e.target.value })}
                       required
                       readOnly
+                      className="text-sm"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="paymentMode">Payment Mode *</Label>
+                    <Label htmlFor="paymentMode" className="text-sm">Payment Mode *</Label>
                     <Select value={formData.paymentMode} onValueChange={(value: any) => setFormData({ ...formData, paymentMode: value })}>
-                      <SelectTrigger>
+                      <SelectTrigger className="text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -434,40 +449,41 @@ export default function ManageBookings() {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="advancePayment">Advance Payment (₹)</Label>
+                    <Label htmlFor="advancePayment" className="text-sm">Advance Payment (₹)</Label>
                     <Input
                       id="advancePayment"
                       type="number"
                       step="0.01"
                       value={formData.advancePayment}
                       onChange={(e) => setFormData({ ...formData, advancePayment: e.target.value })}
+                      className="text-sm"
                     />
                   </div>
                 </div>
 
                 {formData.baseAmount && (
                   <Card className="bg-muted">
-                    <CardContent className="pt-4">
+                    <CardContent className="pt-3">
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span>Base Amount:</span>
-                          <span className="font-medium">₹{parseFloat(formData.baseAmount).toFixed(2)}</span>
+                          <span className="font-medium">₹{parseFloat(formData.baseAmount).toFixed(0)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>GST (5%):</span>
-                          <span className="font-medium">₹{(parseFloat(formData.baseAmount) * 0.05).toFixed(2)}</span>
+                          <span className="font-medium">₹{(parseFloat(formData.baseAmount) * 0.05).toFixed(0)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Advance Paid:</span>
-                          <span className="font-medium">₹{parseFloat(formData.advancePayment).toFixed(2)}</span>
+                          <span className="font-medium">₹{parseFloat(formData.advancePayment).toFixed(0)}</span>
                         </div>
                         <div className="flex justify-between font-bold text-base pt-2 border-t">
                           <span>Total Amount:</span>
-                          <span>₹{(parseFloat(formData.baseAmount) * 1.05).toFixed(2)}</span>
+                          <span>₹{(parseFloat(formData.baseAmount) * 1.05).toFixed(0)}</span>
                         </div>
                         <div className="flex justify-between font-bold text-base text-primary">
                           <span>Remaining:</span>
-                          <span>₹{((parseFloat(formData.baseAmount) * 1.05) - parseFloat(formData.advancePayment)).toFixed(2)}</span>
+                          <span>₹{((parseFloat(formData.baseAmount) * 1.05) - parseFloat(formData.advancePayment)).toFixed(0)}</span>
                         </div>
                       </div>
                     </CardContent>
@@ -483,18 +499,18 @@ export default function ManageBookings() {
         </div>
 
         <Tabs defaultValue="all" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="all">All Bookings ({allBookings.length})</TabsTrigger>
-            <TabsTrigger value="checkin">Check-in Ready ({todayCheckIns.length})</TabsTrigger>
-            <TabsTrigger value="checkout">Check-out Ready ({todayCheckOuts.length})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all" className="text-xs">All ({allBookings.length})</TabsTrigger>
+            <TabsTrigger value="checkin" className="text-xs">Check-in ({todayCheckIns.length})</TabsTrigger>
+            <TabsTrigger value="checkout" className="text-xs">Check-out ({todayCheckOuts.length})</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="all" className="space-y-4">
+          <TabsContent value="all" className="space-y-3">
             {loading ? (
-              <p>Loading bookings...</p>
+              <p className="text-center text-sm">Loading bookings...</p>
             ) : allBookings.length === 0 ? (
               <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
+                <CardContent className="py-8 text-center text-muted-foreground text-sm">
                   No bookings found
                 </CardContent>
               </Card>
@@ -503,10 +519,10 @@ export default function ManageBookings() {
             )}
           </TabsContent>
 
-          <TabsContent value="checkin" className="space-y-4">
+          <TabsContent value="checkin" className="space-y-3">
             {todayCheckIns.length === 0 ? (
               <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
+                <CardContent className="py-8 text-center text-muted-foreground text-sm">
                   No check-ins scheduled for today
                 </CardContent>
               </Card>
@@ -515,10 +531,10 @@ export default function ManageBookings() {
             )}
           </TabsContent>
 
-          <TabsContent value="checkout" className="space-y-4">
+          <TabsContent value="checkout" className="space-y-3">
             {todayCheckOuts.length === 0 ? (
               <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
+                <CardContent className="py-8 text-center text-muted-foreground text-sm">
                   No check-outs scheduled for today
                 </CardContent>
               </Card>
