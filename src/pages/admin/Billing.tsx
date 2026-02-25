@@ -7,10 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useBookings } from '@/hooks/useBookings';
-import { DollarSign, Download, Search, FileText, CheckCircle2, Loader2, Edit2, Plus } from 'lucide-react';
+import { DollarSign, Download, Search, FileText, CheckCircle2, Loader2, Edit2, Plus, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { getDaysBetween } from '@/utils/roomAvailability';
 import { useToast } from '@/hooks/use-toast';
+
+const OWNER_PHONE = '9426786111';
 
 export default function Billing() {
   const { bookings, loading, updateBooking } = useBookings();
@@ -28,6 +30,7 @@ export default function Billing() {
   const [gstError, setGstError] = useState('');
   const [isProcessingGst, setIsProcessingGst] = useState(false);
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
+  const [sharingBookingId, setSharingBookingId] = useState<string | null>(null);
 
   const completedBookings = bookings.filter(b =>
     b.status === 'confirmed' || b.status === 'checked-in' || b.status === 'checked-out'
@@ -86,6 +89,241 @@ export default function Billing() {
       printWindow.close();
     }, 500);
   };
+
+  // ─── Generate real PDF Blob using jsPDF ──────────────────────────────────
+  const generatePdfBlob = async (booking: any): Promise<Blob> => {
+    const jspdfModule = await new Promise<any>((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+      script.onload = () => resolve((window as any).jspdf);
+      script.onerror = reject;
+      // If already loaded, skip
+      if ((window as any).jspdf) { resolve((window as any).jspdf); return; }
+      document.head.appendChild(script);
+    });
+
+    const { jsPDF } = jspdfModule;
+    const days = getDaysBetween(new Date(booking.checkIn), new Date(booking.checkOut));
+
+    const fmt = (date: any, f: string = 'dd MMM yyyy'): string => {
+      try {
+        if (!date) return 'N/A';
+        const d = date?.toDate ? date.toDate() : new Date(date);
+        if (isNaN(d.getTime())) return 'N/A';
+        return format(d, f);
+      } catch { return 'N/A'; }
+    };
+
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const W = 210;
+    const margin = 18;
+    let y = 18;
+
+    const drawLine = (x1: number, y1: number, x2: number, y2: number, w = 0.3) => {
+      doc.setLineWidth(w); doc.line(x1, y1, x2, y2);
+    };
+
+    // Header
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
+    doc.text('HOTEL KRISHNA', margin, y); y += 6;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(90, 90, 90);
+    doc.text('Hotel Management System', margin, y); y += 4.5;
+    doc.text(`Phone: +91 ${OWNER_PHONE}  |  Email: info@hotelkrishna.com`, margin, y); y += 5;
+    doc.setTextColor(0, 0, 0);
+    drawLine(margin, y, W - margin, y, 0.6); y += 6;
+
+    // Bill To / Invoice Details
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+    doc.text('BILL TO:', margin, y);
+    doc.text('INVOICE DETAILS:', W - margin - 55, y); y += 5;
+    doc.setFontSize(11);
+    doc.text(booking.customerName || 'N/A', margin, y);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(90, 90, 90);
+    doc.text(`Invoice #: ${(booking.id?.slice(0, 8) || 'N/A').toUpperCase()}`, W - margin - 55, y); y += 4.5;
+    if (booking.secondPersonName) { doc.setTextColor(0,0,0); doc.text(`+ ${booking.secondPersonName}`, margin, y); doc.setTextColor(90,90,90); }
+    doc.text(`Date: ${fmt(booking.createdAt)}`, W - margin - 55, y); y += 4.5;
+    doc.text(booking.customerEmail || 'N/A', margin, y);
+    doc.text(`Room: ${booking.roomNumber || 'N/A'}`, W - margin - 55, y); y += 4.5;
+    doc.text(booking.customerPhone || 'N/A', margin, y); y += 4.5;
+    doc.text(`Aadhar: ${booking.aadharNumber || 'N/A'}`, margin, y); y += 4.5;
+    if (booking.gstNumber) {
+      doc.setTextColor(0,0,0); doc.setFont('helvetica', 'bold');
+      doc.text(`GST No: ${booking.gstNumber}`, margin, y);
+      doc.setFont('helvetica', 'normal');
+    }
+    doc.setTextColor(0,0,0); y += 7;
+
+    // Stay Details
+    drawLine(margin, y, W - margin, y, 0.4); y += 5;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+    doc.text('STAY DETAILS:', margin, y); y += 5;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+    doc.setTextColor(100,100,100);
+    doc.text('Check-in:', margin, y); doc.text('Check-out:', margin + 55, y); doc.text('Duration:', margin + 115, y); y += 4;
+    doc.setTextColor(0,0,0); doc.setFont('helvetica', 'bold');
+    doc.text(fmt(booking.checkIn), margin, y);
+    doc.text(fmt(booking.checkOut), margin + 55, y);
+    doc.text(`${days} ${days === 1 ? 'Night' : 'Nights'}`, margin + 115, y);
+    doc.setFont('helvetica', 'normal'); y += 8;
+
+    // Table header
+    drawLine(margin, y, W - margin, y, 0.6); y += 5;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+    doc.text('Description', margin, y);
+    doc.text('Amount', W - margin, y, { align: 'right' });
+    y += 3; drawLine(margin, y, W - margin, y, 0.6); y += 6;
+
+    const tableRow = (label: string, amount: string, color?: [number,number,number], bold = false) => {
+      doc.setFont('helvetica', bold ? 'bold' : 'normal'); doc.setFontSize(10);
+      if (color) doc.setTextColor(...color); else doc.setTextColor(0,0,0);
+      doc.text(label, margin, y);
+      doc.text(amount, W - margin, y, { align: 'right' });
+      doc.setTextColor(0,0,0); y += 5;
+      doc.setDrawColor(220,220,220); drawLine(margin, y, W - margin, y, 0.2); doc.setDrawColor(0,0,0);
+      y += 3;
+    };
+
+    const actualAdvance = booking.paymentStatus === 'paid' && booking.finalPaymentAmount
+      ? booking.totalAmount - booking.finalPaymentAmount
+      : booking.advancePayment || 0;
+
+    tableRow(`Room Charges (${days} ${days === 1 ? 'night' : 'nights'})`, `Rs.${(booking.baseAmount || 0).toFixed(2)}`);
+    tableRow('GST (5%)', `Rs.${(booking.gstAmount || 0).toFixed(2)}`);
+
+    // Total bold row
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+    doc.text('Total Amount', margin, y);
+    doc.text(`Rs.${(booking.totalAmount || 0).toFixed(2)}`, W - margin, y, { align: 'right' });
+    y += 3; drawLine(margin, y, W - margin, y, 0.6); y += 6;
+
+    tableRow(`Advance Paid (${(booking.paymentMode || 'CASH').toUpperCase()})`, `-Rs.${actualAdvance.toFixed(2)}`, [22,163,74]);
+    if ((booking.finalPaymentAmount || 0) > 0 && booking.paymentStatus === 'paid') {
+      tableRow(`Remaining Paid (${(booking.finalPaymentMode || 'CASH').toUpperCase()})`, `-Rs.${(booking.finalPaymentAmount).toFixed(2)}`, [22,163,74]);
+    }
+
+    // Amount Due
+    const due = booking.remainingAmount || 0;
+    drawLine(margin, y, W - margin, y, 0.6); y += 5;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+    doc.text('Amount Due', margin, y);
+    doc.setTextColor(due === 0 ? 22 : 220, due === 0 ? 163 : 38, due === 0 ? 74 : 38);
+    doc.text(`Rs.${due.toFixed(2)}`, W - margin, y, { align: 'right' });
+    doc.setTextColor(0,0,0); y += 8;
+
+    // Footer info
+    drawLine(margin, y, W - margin, y, 0.3); y += 5;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(90,90,90);
+    doc.text(`Initial Payment Mode: ${(booking.paymentMode || 'N/A').toUpperCase()}`, margin, y); y += 4.5;
+    if (booking.finalPaymentMode && booking.paymentStatus === 'paid') {
+      doc.text(`Final Payment Mode: ${booking.finalPaymentMode.toUpperCase()}`, margin, y); y += 4.5;
+    }
+    doc.text(`Number of Adults: ${booking.numberOfAdults || 1}`, margin, y); y += 4.5;
+    if (booking.paymentStatus === 'paid' && booking.paidAt) {
+      doc.setTextColor(22,163,74); doc.setFont('helvetica', 'bold');
+      doc.text(`Fully Paid on ${fmt(booking.paidAt)}`, margin, y);
+    }
+    y += 8;
+
+    // Thank you
+    drawLine(margin, y, W - margin, y, 0.3); y += 6;
+    doc.setTextColor(100,100,100); doc.setFontSize(9); doc.setFont('helvetica', 'italic');
+    doc.text('Thank you for choosing Hotel Krishna!', W / 2, y, { align: 'center' }); y += 4.5;
+    doc.text(`For queries: +91 ${OWNER_PHONE}  |  info@hotelkrishna.com`, W / 2, y, { align: 'center' });
+
+    return doc.output('blob') as Blob;
+  };
+
+  // ─── Open WhatsApp directly to customer number ────────────────────────────
+  const openWhatsAppWithBill = (booking: any) => {
+    const rawPhone = (booking.customerPhone || '').replace(/\D/g, '');
+    // Ensure Indian country code prefix
+    const phone = rawPhone.startsWith('91') ? rawPhone : `91${rawPhone}`;
+
+    const days = getDaysBetween(new Date(booking.checkIn), new Date(booking.checkOut));
+    const totalAmt = (booking.totalAmount || 0).toFixed(2);
+    const dueAmt = (booking.remainingAmount || 0).toFixed(2);
+    const advAmt = (booking.advancePayment || 0).toFixed(2);
+
+    const checkInStr = booking.checkIn ? format(new Date(booking.checkIn), 'dd MMM yyyy') : 'N/A';
+    const checkOutStr = booking.checkOut ? format(new Date(booking.checkOut), 'dd MMM yyyy') : 'N/A';
+
+    const isPaid = (booking.remainingAmount || 0) === 0;
+
+    const message =
+`🏨 *HOTEL KRISHNA*
+━━━━━━━━━━━━━━━━━━━━
+📄 *INVOICE / BILL SUMMARY*
+━━━━━━━━━━━━━━━━━━━━
+
+👤 *Guest:* ${booking.customerName || 'N/A'}
+🚪 *Room No:* ${booking.roomNumber || 'N/A'}
+📅 *Check-in:* ${checkInStr}
+📅 *Check-out:* ${checkOutStr}
+🌙 *Duration:* ${days} ${days === 1 ? 'Night' : 'Nights'}
+
+━━━━━━━━━━━━━━━━━━━━
+💰 *PAYMENT DETAILS*
+━━━━━━━━━━━━━━━━━━━━
+🧾 Total Amount:  ₹${totalAmt}
+✅ Advance Paid:  ₹${advAmt}
+${isPaid ? '✅ *Status: FULLY PAID*' : `❗ Amount Due:    ₹${dueAmt}`}
+
+━━━━━━━━━━━━━━━━━━━━
+📞 *Hotel Contact:* +91 ${OWNER_PHONE}
+📧 info@hotelkrishna.com
+
+_Thank you for staying with us! 🙏_`;
+
+    const encoded = encodeURIComponent(message);
+
+    // On mobile: open WhatsApp app; on desktop: open WhatsApp Web directly to the chat
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.open(`https://wa.me/${phone}?text=${encoded}`, '_blank');
+    } else {
+      window.open(`https://web.whatsapp.com/send?phone=${phone}&text=${encoded}`, '_blank');
+    }
+  };
+
+  const handleShareBill = async (booking: any) => {
+    if (sharingBookingId) return;
+    setSharingBookingId(booking.id);
+
+    try {
+      // 1️⃣ Generate a real PDF using jsPDF
+      const pdfBlob = await generatePdfBlob(booking);
+      const fileName = `Invoice_HotelKrishna_${(booking.customerName || 'Guest').replace(/\s+/g, '_')}_Room${booking.roomNumber || ''}.pdf`;
+      const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+      const canShareFiles = navigator.canShare && navigator.canShare({ files: [pdfFile] });
+
+      if (navigator.share && canShareFiles) {
+        // 2️⃣ Share PDF file directly (Android Chrome, Safari iOS 15+)
+        await navigator.share({
+          title: `Invoice - Hotel Krishna | ${booking.customerName || 'Guest'}`,
+          files: [pdfFile],
+        });
+        toast({ title: "PDF Invoice Shared!", description: `Invoice PDF sent for ${booking.customerName}`, variant: "default" });
+      } else {
+        // 3️⃣ Fallback: download PDF + open WhatsApp chat
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fileName; a.click();
+        URL.revokeObjectURL(url);
+        setTimeout(() => openWhatsAppWithBill(booking), 800);
+        toast({ title: "PDF Downloaded + WhatsApp Opening", description: "PDF saved — attach it in the WhatsApp chat that opens", variant: "default" });
+      }
+    } catch (error: any) {
+      if (error?.name !== 'AbortError') {
+        // 4️⃣ Last resort: WhatsApp text message
+        openWhatsAppWithBill(booking);
+        toast({ title: "Opening WhatsApp", description: `Opening chat with ${booking.customerPhone || 'customer'}`, variant: "default" });
+      }
+    } finally {
+      setSharingBookingId(null);
+    }
+  };
+  // ──────────────────────────────────────────────────────────────────────────
 
   const handleMarkAsPaidClick = (booking: any) => {
     setBookingToMarkPaid(booking);
@@ -209,7 +447,7 @@ export default function Billing() {
         <div style={{ borderBottom: '2px solid #222', paddingBottom: '8px', marginBottom: '10px' }}>
           <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 'bold', letterSpacing: '1px' }}>HOTEL KRISHNA</h1>
           <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#555' }}>Hotel Management System</p>
-          <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#555' }}>Phone: +91 XXXXXXXXXX | Email: info@hotelkrishna.com</p>
+          <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#555' }}>Phone: +91 {OWNER_PHONE} | Email: info@hotelkrishna.com</p>
         </div>
 
         {/* Bill To + Invoice Details */}
@@ -327,7 +565,7 @@ export default function Billing() {
         {/* Thank You */}
         <div style={{ textAlign: 'center', fontSize: '11px', color: '#666', borderTop: '1px solid #ddd', paddingTop: '8px' }}>
           <p style={{ margin: '2px 0' }}>Thank you for choosing Hotel Krishna!</p>
-          <p style={{ margin: '2px 0' }}>For any queries, please contact us at info@hotelkrishna.com</p>
+          <p style={{ margin: '2px 0' }}>For any queries, contact us at +91 {OWNER_PHONE} | info@hotelkrishna.com</p>
         </div>
       </div>
     );
@@ -419,6 +657,7 @@ export default function Billing() {
                   const hasDueAmount = (booking.remainingAmount || 0) > 0;
                   const isPaid = (booking.remainingAmount || 0) === 0;
                   const isExpanded = expandedBooking === booking.id;
+                  const isSharing = sharingBookingId === booking.id;
 
                   return (
                     <div key={booking.id} className={`booking-card mobile-billing-card border rounded-lg overflow-hidden transition-all duration-200 ${isExpanded ? 'expanded border-primary/20 shadow-sm' : 'hover:border-muted-foreground/20'}`}>
@@ -523,6 +762,27 @@ export default function Billing() {
                             >
                               <FileText className="h-4 w-4 mr-2" />
                               Generate Invoice
+                            </Button>
+
+                            {/* ── SHARE BILL BUTTON ── */}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={isSharing}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShareBill(booking);
+                              }}
+                              className="w-full justify-start border-green-500 text-green-700 hover:bg-green-50 hover:text-green-800"
+                            >
+                              {isSharing ? (
+                                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Sharing...</>
+                              ) : (
+                                <>
+                                  <Share2 className="h-4 w-4 mr-2" />
+                                  Share Bill to {booking.customerPhone ? booking.customerPhone : 'Customer'}
+                                </>
+                              )}
                             </Button>
                           </div>
                         </div>
